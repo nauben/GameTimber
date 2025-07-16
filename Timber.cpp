@@ -2,6 +2,14 @@
 
 using namespace sf;
 
+
+void updateBranches(int seed);
+const int NUM_BRANCHES = 6;
+std::optional<Sprite> branches[NUM_BRANCHES];
+
+enum class side { LEFT, RIGHT, NONE };
+side branchPositions[NUM_BRANCHES];
+
 int main()
 {
     const int   SCREEN_WIDTH                    = 1920;
@@ -88,6 +96,14 @@ int main()
     messageText.setPosition({ SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f });
     scoreText.setPosition({ 20, 20 });
 
+    Texture textureBranch;
+    textureBranch.loadFromFile("graphics/branch.png");
+    for (int i = 0; i < NUM_BRANCHES; i++)
+    {
+        branches[i] = std::optional<Sprite> { textureBranch };
+        branches[i].value().setPosition({ -2000, -2000 });
+        branches[i].value().setOrigin({ 220, 20 });
+    }
 
     while (window.isOpen())
     {
@@ -228,6 +244,25 @@ int main()
             ss << "Score = " << score;
             scoreText.setString(ss.str());
 
+            for (int i = 0; i < NUM_BRANCHES; i++)
+            {
+                float height = i * 150;
+                if (branchPositions[i] == side::LEFT)
+                {
+                    branches[i].value().setPosition({ 610, height });
+                    branches[i].value().setRotation(degrees(180));
+                }
+                else if (branchPositions[i] == side::LEFT)
+                {
+                    branches[i].value().setPosition({ 1330, height });
+                    branches[i].value().setRotation(degrees(0));
+                }
+                else
+                {
+                    branches[i].value().setPosition({3000, height});
+                }
+            }
+
         } // End if (!paused)
 
 
@@ -242,6 +277,10 @@ int main()
         window.draw(spriteCloud1);
         window.draw(spriteCloud2);
         window.draw(spriteCloud3);
+        for (int i = 0; i < NUM_BRANCHES; i++)
+        {
+            window.draw(branches[i].value());
+        }
         window.draw(spriteTree);
         window.draw(spriteBee);
         window.draw(scoreText);
@@ -256,4 +295,26 @@ int main()
 
 
     return 0;
+}
+
+void updateBranches(int seed)
+{
+    for (int j = NUM_BRANCHES - 1; j > 0; j--)
+    {
+        branchPositions[j] = branchPositions[j - 1];
+    }
+
+    srand((int)time(0) + seed);
+    int r = (rand() % 5);
+    switch (r)
+    {
+    case 0:
+        branchPositions[0] = side::LEFT;
+        break;
+    case 1: 
+        branchPositions[0] = side::RIGHT;
+        break;
+    default: branchPositions[0] = side::NONE;
+        break;
+    }
 }
