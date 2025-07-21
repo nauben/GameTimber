@@ -12,6 +12,8 @@ std::optional<Sprite> branches[NUM_BRANCHES];
 enum class side { LEFT, RIGHT, NONE };
 side branchPositions[NUM_BRANCHES];
 
+
+
 int main()
 {
 	const int   SCREEN_WIDTH = 1920;
@@ -20,6 +22,8 @@ int main()
 	const float TREE_VERTICAL_POSITION = 0;
 	const float BEE_HORIZONTAL_START_POSITION = 0;
 	const float BEE_VERTICAL_START_POSITION = 800;
+	const int NUM_CLOUDS = 6;
+	
 
 	VideoMode vm({ SCREEN_WIDTH, SCREEN_HEIGHT });
 	RenderWindow window(vm, "Timber", Style::None, State::Windowed);
@@ -49,18 +53,21 @@ int main()
 	// Clouds
 	Texture textureCloud;
 	loadSuccessfull = textureCloud.loadFromFile("graphics/cloud.png");
-	Sprite spriteCloud1(textureCloud);
-	Sprite spriteCloud2(textureCloud);
-	Sprite spriteCloud3(textureCloud);
-	spriteCloud1.setPosition({ 0, 0 });
-	spriteCloud2.setPosition({ 0, 250 });
-	spriteCloud3.setPosition({ 0, 500 });
-	bool cloud1Active = false;
-	bool cloud2Active = false;
-	bool cloud3Active = false;
-	float cloud1Speed = 0.0f;
-	float cloud2Speed = 0.0f;
-	float cloud3Speed = 0.0f;
+	std::optional<Sprite> clouds[NUM_CLOUDS];
+	bool cloudActive[NUM_CLOUDS];
+	float cloudSpeed[NUM_CLOUDS];
+	for (int i = 0; i < NUM_CLOUDS; i++)
+	{
+		clouds[i] = std::optional<Sprite>{ textureCloud };
+		clouds[i].value().setOrigin({ 220, 20 });
+		srand((int)time(0) * 10 * i);
+		cloudSpeed[i] = (rand() % 200);
+		srand((int)time(0) * 10 * i);
+		float height = (rand() % 150);
+		float offset = (rand() % 150);
+		clouds[i].value().setPosition({ -200 - offset, height });
+		cloudActive[i] = true;
+	}
 
 	// Time control
 	Clock clock;
@@ -262,70 +269,28 @@ int main()
 			}
 
 			// Clouds
-			// Cloud 1
-			if (!cloud1Active)
+			for (int i = 0; i < NUM_CLOUDS; i++)
 			{
-				srand((int)time(0) * 10);
-				cloud1Speed = (rand() % 200);
-				srand((int)time(0) * 10);
-				float height = (rand() % 150);
-				spriteCloud1.setPosition({ -200, height });
-				cloud1Active = true;
-			}
-			else
-			{
-				spriteCloud1.setPosition({
-					spriteCloud1.getPosition().x + (cloud1Speed * dt.asSeconds()),
-					spriteCloud1.getPosition().y
-					});
-
-				if (spriteCloud1.getPosition().x > 1920)
+				if (!cloudActive[i])
 				{
-					cloud1Active = false;
+					srand((int)time(0) * 10 * i);
+					cloudSpeed[i] = (rand() % 200);
+					srand((int)time(0) * 10 * i);
+					float height = (rand() % 150);
+					clouds[i].value().setPosition({-200, height});
+					cloudActive[i] = true;
 				}
-			}
-			// Cloud 2
-			if (!cloud2Active)
-			{
-				srand((int)time(0) * 20);
-				cloud2Speed = (rand() % 200);
-				srand((int)time(0) * 20);
-				float height = (rand() % 150);
-				spriteCloud2.setPosition({ -200, height });
-				cloud2Active = true;
-			}
-			else
-			{
-				spriteCloud2.setPosition({
-					spriteCloud2.getPosition().x + (cloud2Speed * dt.asSeconds()),
-					spriteCloud2.getPosition().y
+				else
+				{
+					clouds[i].value().setPosition({
+						clouds[i].value().getPosition().x + (cloudSpeed[i] * dt.asSeconds()),
+						clouds[i].value().getPosition().y
 					});
 
-				if (spriteCloud2.getPosition().x > 1920)
-				{
-					cloud2Active = false;
-				}
-			}
-			// Cloud 3
-			if (!cloud3Active)
-			{
-				srand((int)time(0) * 30);
-				cloud3Speed = (rand() % 200);
-				srand((int)time(0) * 30);
-				float height = (rand() % 150);
-				spriteCloud3.setPosition({ -200, height });
-				cloud3Active = true;
-			}
-			else
-			{
-				spriteCloud3.setPosition({
-					spriteCloud3.getPosition().x + (cloud3Speed * dt.asSeconds()),
-					spriteCloud3.getPosition().y
-					});
-
-				if (spriteCloud3.getPosition().x > 1920)
-				{
-					cloud3Active = false;
+					if (clouds[i].value().getPosition().x > 1920)
+					{
+						cloudActive[i] = false;
+					}
 				}
 			}
 
@@ -394,9 +359,10 @@ int main()
 		window.clear();
 
 		window.draw(spriteBackground);
-		window.draw(spriteCloud1);
-		window.draw(spriteCloud2);
-		window.draw(spriteCloud3);
+		for (int i = 0; i < NUM_CLOUDS; i++)
+		{
+			window.draw(clouds[i].value());
+		}
 		for (int i = 0; i < NUM_BRANCHES; i++)
 		{
 			window.draw(branches[i].value());
